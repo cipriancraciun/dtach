@@ -61,7 +61,9 @@ usage()
 		"\t\t  does not exist, running the specified command.\n"
 		"  -c\t\tCreate a new socket and run the specified command.\n"
 		"  -n\t\tCreate a new socket and run the specified command "
-		"detached.\n"
+		"detached (daemonized, in bagkground).\n"
+		"  -N\t\tCreate a new socket and run the specified command "
+		"detached (non-daemonized, in foreground).\n"
 		"Options:\n"
 		"  -e <char>\tSet the detach character to <char>, defaults "
 		"to ^\\.\n"
@@ -102,7 +104,7 @@ main(int argc, char **argv)
 		if (mode == '?')
 			usage();
 		else if (mode != 'a' && mode != 'c' && mode != 'n' &&
-			 mode != 'A')
+			 mode != 'N' && mode != 'A')
 		{
 			printf("%s: Invalid mode '-%c'\n", progname, mode);
 			printf("Try '%s --help' for more information.\n",
@@ -215,7 +217,7 @@ main(int argc, char **argv)
 		dont_have_tty = 1;
 	}
 
-	if (dont_have_tty && mode != 'n')
+	if (dont_have_tty && (mode != 'n' && mode != 'N'))
 	{
 		printf("%s: Attaching to a session requires a terminal.\n",
 			progname);
@@ -236,6 +238,8 @@ main(int argc, char **argv)
 	}
 	else if (mode == 'n')
 		return master_main(argv, 0);
+	else if (mode == 'N')
+		return master_main_inprocess(argv, 0);
 	else if (mode == 'c')
 	{
 		if (master_main(argv, 1) != 0)

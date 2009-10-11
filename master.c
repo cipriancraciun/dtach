@@ -507,6 +507,33 @@ master_process(int s, char **argv, int waitattach, int statusfd)
 }
 
 int
+master_main_inprocess(char **argv, int waitattach)
+{
+	int s;
+
+	/* Use a default redraw method if one hasn't been specified yet. */
+	if (redraw_method == REDRAW_UNSPEC)
+		redraw_method = REDRAW_CTRL_L;
+
+	/* Create the unix domain socket. */
+	s = create_socket(sockname);
+	if (s < 0)
+	{
+		printf("%s: %s: %s\n", progname, sockname, strerror(errno));
+		return 1;
+	}
+
+#if defined(F_SETFD) && defined(FD_CLOEXEC)
+	fcntl(s, F_SETFD, FD_CLOEXEC);
+#endif
+
+	/* Child - this becomes the master */
+	master_process(s, argv, waitattach, dup(2));
+
+	return 0;
+}
+
+int
 master_main(char **argv, int waitattach)
 {
 	int fd[2] = {-1, -1};
